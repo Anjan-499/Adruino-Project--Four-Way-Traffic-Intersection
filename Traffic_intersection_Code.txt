@@ -1,0 +1,159 @@
+//A prototype for Four-way Traffic Intersection that has a main road,
+//an auxiliary road and a pedestrian crosswalk
+
+const int pedLight = A6; //pedLight
+const int mainTraffic = A7; //mainTraffic
+const int x = A1; //mainTraffic
+
+//connection of MAIN Road Lights to Adruino
+const int red=12;
+const int yel=11;
+const int gre=10;
+
+//connection of AUX Road Lights to Adruino
+const int red2=2;
+const int yel2=3;
+const int gre2=8;
+
+//SENSOR
+int inputPin = A4;               // choose the input pin (for PIR sensor)
+int pirState = LOW;             // we start, assuming no motion detected
+int val = 0;                    // variable for reading the pin status
+
+//Variables
+int value, value2, value3;     
+
+    //temp
+    int z = 0;
+
+void setup(){
+ pinMode(red, OUTPUT);  
+ pinMode(yel, OUTPUT);
+ pinMode(gre, OUTPUT);
+ pinMode(red2, OUTPUT);
+ pinMode(yel2, OUTPUT);
+ pinMode(gre2, OUTPUT);
+
+ //Pedestrian Path
+ pinMode(7, OUTPUT);
+ pinMode(6, OUTPUT);
+ pinMode(5, OUTPUT);
+ 
+ pinMode(pedLight, INPUT); 
+ pinMode(mainTraffic, INPUT); 
+ pinMode(x, INPUT); //change name
+
+ //SENSOR
+ pinMode(inputPin, INPUT);
+ Serial.begin(9600);
+}
+//Main Road will be given priority so that it will be green all the 
+//time unless the pedestrian pushes the switch button.
+
+//CHANGES YELLOW TO RED
+void mainLights(){
+    digitalWrite(gre, LOW);
+    delay(1000);
+    digitalWrite(yel, HIGH);
+    delay(1000);
+    digitalWrite(red, LOW);
+    delay(1000);//Turn led off
+
+    digitalWrite(gre, LOW);
+    delay(1000);
+    digitalWrite(yel, LOW);
+    delay(1000);
+    digitalWrite(red, HIGH);
+
+    digitalWrite(gre2, HIGH); //Turn led on
+    digitalWrite(yel2, LOW);
+    digitalWrite(red2, LOW);
+    delay(1000);
+    }
+    
+void defaultLights(){
+    digitalWrite(gre, HIGH); //Turn led on
+    digitalWrite(red, LOW);
+    digitalWrite(yel, LOW);
+    digitalWrite(red2, HIGH);
+    delay(1000);
+    }
+
+void pedestrianLights(){
+    digitalWrite(7, HIGH);
+    delay(300);
+    digitalWrite(6, HIGH);
+    delay(300);
+    digitalWrite(5, HIGH);
+    delay(3000);
+    digitalWrite(7, LOW);
+    delay(500);
+    digitalWrite(6, LOW);
+    delay(500);
+    digitalWrite(5, LOW);
+    delay(500);
+}
+
+void auxLightsStop(){
+    digitalWrite(gre2, LOW); //Turn led on
+    digitalWrite(yel2, HIGH);
+    digitalWrite(red2, LOW);
+    delay(1000);
+    
+    digitalWrite(gre2, LOW); //Turn led on
+    digitalWrite(yel2, LOW);
+    digitalWrite(red2, HIGH);
+    delay(500);
+}
+
+// If the motion sensor detects motion, then pedestrian switch 
+// button will not work. 
+
+int sensor(){
+  val = digitalRead(inputPin);  // read input value
+  //Serial.print("val:");
+  //Serial.println(val);
+  if (val == HIGH) {            // check if the input is HIGH
+    
+    if (pirState == LOW) {
+      // we have just turned on
+      Serial.println("Car in Main Road Detected!");
+      // We only want to print on the output change, not state
+      pirState = HIGH;
+      return LOW;
+    }
+  } 
+  else {
+    //digitalWrite(ledPin, LOW); // turn LED OFF
+    if (pirState == HIGH){
+      // we have just turned of
+      Serial.println("No Car in Main Road!");
+      // We only want to print on the output change, not state
+      pirState = LOW;
+      return HIGH;
+    }
+  }
+}
+
+void loop(){
+  value = analogRead(pedLight);
+  value2 = analogRead(mainTraffic);
+  value3 = analogRead(x);
+  Serial.println(value);
+  Serial.println(value2);
+  Serial.println(value3);
+  Serial.println( );
+  delay(500);
+  z = sensor();
+  if ((value > 400) && (z == HIGH)){
+  //if ((value > 400) && (value2 < 400)){   //IF USING SWITCH
+     mainLights();
+     pedestrianLights();
+     auxLightsStop();
+  }
+
+  else{
+    defaultLights();
+  }
+  delay(500); // delay timer of 0.5 sec
+}
